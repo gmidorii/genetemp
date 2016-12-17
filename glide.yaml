@@ -1,2 +1,3 @@
 package: github.com/midorigreen/genetemp
-import: []
+import:
+- package: gopkg.in/yaml.v2

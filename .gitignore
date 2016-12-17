@@ -6,3 +6,5 @@ vendor/
 .LSOverride
 Icon
 
+.idea
+*.iml
