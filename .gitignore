@@ -8,3 +8,5 @@ Icon
 
 .idea
 *.iml
+output/*
+!output/.gitkeep
