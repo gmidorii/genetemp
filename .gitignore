@@ -10,3 +10,7 @@ Icon
 *.iml
 output/*
 !output/.gitkeep
+template/*
+!template/.gitkeep
+config/*
+!config/.gitkeep

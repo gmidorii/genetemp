@@ -12,13 +12,13 @@ type Class struct {
 }
 
 func main()  {
-	buf, err := ioutil.ReadFile("template/template.yaml")
+	config, err := ioutil.ReadFile("config/config.yaml")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var class Class
-	err = yaml.Unmarshal(buf, &class)
+	err = yaml.Unmarshal(config, &class)
 
 	err = ioutil.WriteFile("output/" + class.Name, []byte(class.Name), 0755)
 	if err != nil {
