@@ -34,7 +34,7 @@ func main() {
 	}
 	defer temp.Close()
 
-	fp, err := os.OpenFile("output/service", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	fp, err := os.OpenFile("output/" + class.Name, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
