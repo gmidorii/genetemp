@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"regexp"
-
 	"gopkg.in/yaml.v2"
 	"strings"
 )
@@ -26,8 +25,8 @@ func main() {
 	var class Class
 	err = yaml.Unmarshal(param, &class)
 	classMap := map[string]string{
-					"[className]": class.Name,
-					"[dir]": class.Path}
+		"[className]": class.Name,
+		"[dir]":       class.Path}
 
 	// read template
 	temp, err := os.Open("template/service.java")
@@ -36,20 +35,18 @@ func main() {
 	}
 	defer temp.Close()
 
-	re, _ := regexp.Compile("\\[.*?\\]")
+	reg, _ := regexp.Compile("\\[.*?\\]")
 	sc := bufio.NewScanner(temp)
 	for i := 0; sc.Scan(); i++ {
 		if err := sc.Err(); err != nil {
 			break
 		}
 		text := sc.Text()
-		match := re.FindAllStringSubmatch(text, -1)
+		match := reg.FindAllString(text, -1)
 		for key, value := range classMap {
-			for _, matchValue := range match {
-				for _, m := range matchValue {
-					if key == m {
-						text = strings.Replace(text, m, value, -1)
-					}
+			for _, m := range match {
+				if key == m {
+					text = strings.Replace(text, m, value, -1)
 				}
 			}
 		}
