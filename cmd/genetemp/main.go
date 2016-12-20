@@ -2,12 +2,11 @@ package main
 
 import (
 	"bufio"
-	"fmt"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
-	"gopkg.in/yaml.v2"
 	"strings"
 )
 
@@ -35,14 +34,26 @@ func main() {
 	}
 	defer temp.Close()
 
+	fp, err := os.OpenFile("output/service", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	writer := bufio.NewWriter(fp)
+
 	reg, _ := regexp.Compile("\\[.*?\\]")
 	sc := bufio.NewScanner(temp)
 	for i := 0; sc.Scan(); i++ {
 		if err := sc.Err(); err != nil {
 			break
 		}
+
 		text := sc.Text()
 		match := reg.FindAllString(text, -1)
+		if match == nil {
+			writer.WriteString("\n")
+			continue
+		}
+
 		for key, value := range classMap {
 			for _, m := range match {
 				if key == m {
@@ -50,12 +61,8 @@ func main() {
 				}
 			}
 		}
-		fmt.Println(text)
-	}
-
-	// output file
-	err = ioutil.WriteFile("output/"+class.Name, []byte(class.Name), 0755)
-	if err != nil {
-		log.Fatal(err)
+		writer.WriteString(text)
+		writer.WriteString("\n")
+		writer.Flush()
 	}
 }
