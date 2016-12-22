@@ -101,6 +101,9 @@ func main() {
 }
 
 func dirExist(dirname string) bool {
-	_, err := os.Stat(dirname)
-	return err == nil
+	dir, err := os.Stat(dirname)
+	if err != nil {
+		return false
+	}
+	return dir.IsDir()
 }
