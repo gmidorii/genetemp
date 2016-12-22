@@ -8,6 +8,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"flag"
 )
 
 type Class struct {
@@ -16,8 +17,12 @@ type Class struct {
 }
 
 func main() {
+	c := flag.String("c", "config", "loading config file path")
+	t := flag.String("t", "template", "loading template file path")
+	flag.Parse()
+
 	// read param
-	param, err := ioutil.ReadFile("config/config.yaml")
+	param, err := ioutil.ReadFile(*c)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -28,7 +33,7 @@ func main() {
 		"[dir]":       class.Path}
 
 	// read template
-	temp, err := os.Open("template/service.java")
+	temp, err := os.Open(*t)
 	if err != nil {
 		log.Fatal(err)
 	}
