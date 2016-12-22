@@ -2,18 +2,21 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
-	"flag"
+	"fmt"
 )
 
 type Class struct {
 	Name string
 	Path string
+	Extension string
 }
 
 func main() {
@@ -39,7 +42,24 @@ func main() {
 	}
 	defer temp.Close()
 
-	fp, err := os.OpenFile("output/" + class.Name, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	// get current directory
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	output := filepath.Join(dir, "output")
+	// make directory
+	if !dirExist(output) {
+		err := os.Mkdir(output, os.ModePerm)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+	}
+
+	file := filepath.Join(output, class.Name + class.Extension)
+	fp, err := os.Create(file)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -47,15 +67,17 @@ func main() {
 
 	reg, _ := regexp.Compile("\\[.*?\\]")
 	sc := bufio.NewScanner(temp)
-	for i := 0; sc.Scan(); i++ {
+	for sc.Scan() {
 		if err := sc.Err(); err != nil {
 			break
 		}
 
 		text := sc.Text()
 		match := reg.FindAllString(text, -1)
-		if match == nil {
+		if len(match) == 0 {
+			writer.WriteString(text)
 			writer.WriteString("\n")
+			writer.Flush()
 			continue
 		}
 
@@ -70,4 +92,15 @@ func main() {
 		writer.WriteString("\n")
 		writer.Flush()
 	}
+
+	fmt.Println("--------------------------------")
+	fmt.Println("template: " + *t)
+	fmt.Println("config: " + *c)
+	fmt.Println("create: " + file)
+	fmt.Println("--------------------------------")
+}
+
+func dirExist(dirname string) bool {
+	_, err := os.Stat(dirname)
+	return err == nil
 }
