@@ -33,8 +33,8 @@ func main() {
 	var class Class
 	err = yaml.Unmarshal(param, &class)
 	classMap := map[string]string{
-		"[className]": class.Name,
-		"[dir]":       class.Path}
+		"[name]": class.Name,
+		"[path]":       class.Path}
 
 	// get current directory
 	dir, err := os.Getwd()
@@ -48,7 +48,7 @@ func main() {
 	}
 	pack = pack + "." + class.Name
 	pack = strings.TrimLeft(pack, ".")
-	classMap["[dir]"] = pack
+	classMap["[path]"] = pack
 
 	// make directory
 	if !dirExist(dir) {
