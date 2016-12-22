@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"flag"
+	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
@@ -10,16 +11,16 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"fmt"
 )
 
 type Class struct {
-	Name string
-	Path string
+	Name      string
+	Path      string
 	Extension string
 }
 
 func main() {
+	// set flag
 	c := flag.String("c", "config", "loading config file path")
 	t := flag.String("t", "template", "loading template file path")
 	flag.Parse()
@@ -35,36 +36,35 @@ func main() {
 		"[className]": class.Name,
 		"[dir]":       class.Path}
 
-	// read template
-	temp, err := os.Open(*t)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer temp.Close()
-
 	// get current directory
 	dir, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
+	errorCheck(err)
 
-	output := filepath.Join(dir, "output")
+	var pack string
+	paths := strings.Split(class.Path, "/")
+	for _, path := range paths {
+		dir = filepath.Join(dir, path)
+		pack = pack + "." + path
+	}
+	pack = pack + "." + class.Name
+	pack = strings.TrimLeft(pack, ".")
+	classMap["[dir]"] = pack
+
 	// make directory
-	if !dirExist(output) {
-		err := os.Mkdir(output, os.ModePerm)
-		if err != nil {
-			log.Fatal(err)
-			return
-		}
+	if !dirExist(dir) {
+		err := os.MkdirAll(dir, os.ModePerm)
+		errorCheck(err)
 	}
 
-	file := filepath.Join(output, class.Name + class.Extension)
+	file := filepath.Join(dir, class.Name+class.Extension)
 	fp, err := os.Create(file)
-	if err != nil {
-		log.Fatal(err)
-	}
+	errorCheck(err)
 	writer := bufio.NewWriter(fp)
 
+	// read template
+	temp, err := os.Open(*t)
+	errorCheck(err)
+	defer temp.Close()
 	reg, _ := regexp.Compile("\\[.*?\\]")
 	sc := bufio.NewScanner(temp)
 	for sc.Scan() {
@@ -75,9 +75,7 @@ func main() {
 		text := sc.Text()
 		match := reg.FindAllString(text, -1)
 		if len(match) == 0 {
-			writer.WriteString(text)
-			writer.WriteString("\n")
-			writer.Flush()
+			writeFile(text, writer)
 			continue
 		}
 
@@ -88,9 +86,7 @@ func main() {
 				}
 			}
 		}
-		writer.WriteString(text)
-		writer.WriteString("\n")
-		writer.Flush()
+		writeFile(text, writer)
 	}
 
 	fmt.Println("--------------------------------")
@@ -106,4 +102,15 @@ func dirExist(dirname string) bool {
 		return false
 	}
 	return dir.IsDir()
+}
+
+func writeFile(text string, writer *bufio.Writer) {
+	writer.Write([]byte(text + "\n"))
+	writer.Flush()
+}
+
+func errorCheck(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
 }
