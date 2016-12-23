@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -30,70 +31,75 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	var class Class
-	err = yaml.Unmarshal(param, &class)
-	classMap := map[string]string{
-		"[name]": class.Name,
-		"[path]":       class.Path}
+	var classes []Class
+	err = yaml.Unmarshal(param, &classes)
 
-	// get current directory
-	dir, err := os.Getwd()
-	errorCheck(err)
+	for n, class := range classes {
+		classMap := map[string]string{
+			"[name]": class.Name,
+			"[path]": class.Path}
 
-	var pack string
-	paths := strings.Split(class.Path, "/")
-	for _, path := range paths {
-		dir = filepath.Join(dir, path)
-		pack = pack + "." + path
-	}
-	pack = pack + "." + class.Name
-	pack = strings.TrimLeft(pack, ".")
-	classMap["[path]"] = pack
-
-	// make directory
-	if !dirExist(dir) {
-		err := os.MkdirAll(dir, os.ModePerm)
+		// get current directory
+		dir, err := os.Getwd()
 		errorCheck(err)
-	}
 
-	file := filepath.Join(dir, class.Name+class.Extension)
-	fp, err := os.Create(file)
-	errorCheck(err)
-	writer := bufio.NewWriter(fp)
+		var pack string
+		paths := strings.Split(class.Path, "/")
+		for _, path := range paths {
+			dir = filepath.Join(dir, path)
+			pack = pack + "." + path
+		}
+		pack = pack + "." + class.Name
+		pack = strings.TrimLeft(pack, ".")
+		classMap["[path]"] = pack
 
-	// read template
-	temp, err := os.Open(*t)
-	errorCheck(err)
-	defer temp.Close()
-	reg, _ := regexp.Compile("\\[.*?\\]")
-	sc := bufio.NewScanner(temp)
-	for sc.Scan() {
-		if err := sc.Err(); err != nil {
-			break
+		// make directory
+		if !dirExist(dir) {
+			err := os.MkdirAll(dir, os.ModePerm)
+			errorCheck(err)
 		}
 
-		text := sc.Text()
-		match := reg.FindAllString(text, -1)
-		if len(match) == 0 {
-			writeFile(text, writer)
-			continue
-		}
+		file := filepath.Join(dir, class.Name+class.Extension)
+		fp, err := os.Create(file)
+		errorCheck(err)
+		writer := bufio.NewWriter(fp)
 
-		for key, value := range classMap {
-			for _, m := range match {
-				if key == m {
-					text = strings.Replace(text, m, value, -1)
+		// read template
+		temp, err := os.Open(*t)
+		if err != nil {
+			log.Fatal(err)
+		}
+		reg, _ := regexp.Compile("\\[.*?\\]")
+		sc := bufio.NewScanner(temp)
+		for sc.Scan() {
+			if err := sc.Err(); err != nil {
+				break
+			}
+
+			text := sc.Text()
+			match := reg.FindAllString(text, -1)
+			if len(match) == 0 {
+				writeFile(text, writer)
+				continue
+			}
+
+			for key, value := range classMap {
+				for _, m := range match {
+					if key == m {
+						text = strings.Replace(text, m, value, -1)
+					}
 				}
 			}
+			writeFile(text, writer)
 		}
-		writeFile(text, writer)
-	}
 
-	fmt.Println("--------------------------------")
-	fmt.Println("template: " + *t)
-	fmt.Println("config: " + *c)
-	fmt.Println("create: " + file)
-	fmt.Println("--------------------------------")
+		fmt.Println("--------------------------------")
+		fmt.Println("no: " + strconv.Itoa(n))
+		fmt.Println("template: " + *t)
+		fmt.Println("config: " + *c)
+		fmt.Println("create: " + file)
+		fmt.Println("--------------------------------")
+	}
 }
 
 func dirExist(dirname string) bool {
