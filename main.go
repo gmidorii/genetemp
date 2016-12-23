@@ -18,12 +18,12 @@ type Class struct {
 	Name      string
 	Path      string
 	Extension string
+	Template  string
 }
 
 func main() {
 	// set flag
 	c := flag.String("c", "config", "loading config file path")
-	t := flag.String("t", "template", "loading template file path")
 	flag.Parse()
 
 	// read param
@@ -65,7 +65,7 @@ func main() {
 		writer := bufio.NewWriter(fp)
 
 		// read template
-		temp, err := os.Open(*t)
+		temp, err := os.Open(class.Template)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -95,7 +95,7 @@ func main() {
 
 		fmt.Println("--------------------------------")
 		fmt.Println("no: " + strconv.Itoa(n))
-		fmt.Println("template: " + *t)
+		fmt.Println("template: " + class.Template)
 		fmt.Println("config: " + *c)
 		fmt.Println("create: " + file)
 		fmt.Println("--------------------------------")

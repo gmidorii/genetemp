@@ -7,6 +7,7 @@ genetemp generates [Java] file.
 ```
 name(Required): GeneTemp
 path(Required): github.com/midorigreen/genetemp
+template(Required): template/class.java
 ```
 
 #### template file
@@ -27,5 +28,5 @@ go build
 
 ### Run
 ```
-./genetemp -t [templatefile] -c [configfile]
+./genetemp -c [configfile]
 ```
