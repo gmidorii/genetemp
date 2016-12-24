@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"io"
 )
 
 type Class struct {
@@ -25,13 +26,15 @@ func main() {
 	// set flag
 	c := flag.String("c", "config", "loading config file path")
 	flag.Parse()
+	configReader, err := os.Open(*c)
+	errorCheck(err)
+	defer configReader.Close()
 
-	for n, class := range readClasses(*c) {
+	for n, class := range readClasses(configReader) {
 		classMap := map[string]string{
 			"[name]": class.Name,
 			"[path]": class.Path}
 
-		// get current directory
 		dir, err := os.Getwd()
 		errorCheck(err)
 
@@ -51,13 +54,19 @@ func main() {
 			errorCheck(err)
 		}
 
+		// create output file and writer
 		file := filepath.Join(dir, class.Name+class.Extension)
 		fp, err := os.Create(file)
 		errorCheck(err)
 		writer := bufio.NewWriter(fp)
 
+		// read template file
+		temp, err := os.Open(class.Template)
+		if err != nil {
+			log.Fatal(err)
+		}
+		sc := bufio.NewScanner(temp)
 		reg, _ := regexp.Compile("\\[.*?\\]")
-		sc := bufio.NewScanner(readTemplate(class.Template))
 		for sc.Scan() {
 			if err := sc.Err(); err != nil {
 				break
@@ -108,8 +117,8 @@ func errorCheck(err error) {
 	}
 }
 
-func readClasses(config string) []Class {
-	param, err := ioutil.ReadFile(config)
+func readClasses(config io.Reader) []Class {
+	param, err := ioutil.ReadAll(config)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -118,11 +127,3 @@ func readClasses(config string) []Class {
 	return classes
 }
 
-func readTemplate(path string) *os.File {
-	temp, err := os.Open(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer temp.Close()
-	return temp
-}
