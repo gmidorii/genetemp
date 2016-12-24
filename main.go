@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"gopkg.in/yaml.v2"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -12,7 +12,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"io"
+
+	"gopkg.in/yaml.v2"
 )
 
 type Class struct {
@@ -117,13 +118,15 @@ func errorCheck(err error) {
 	}
 }
 
-func readClasses(config io.Reader) []Class {
-	param, err := ioutil.ReadAll(config)
+func readClasses(r io.Reader) []Class {
+	param, err := ioutil.ReadAll(r)
 	if err != nil {
 		log.Fatal(err)
 	}
 	var classes []Class
 	err = yaml.Unmarshal(param, &classes)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return classes
 }
-
