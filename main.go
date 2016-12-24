@@ -26,15 +26,7 @@ func main() {
 	c := flag.String("c", "config", "loading config file path")
 	flag.Parse()
 
-	// read param
-	param, err := ioutil.ReadFile(*c)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var classes []Class
-	err = yaml.Unmarshal(param, &classes)
-
-	for n, class := range classes {
+	for n, class := range readClasses(*c) {
 		classMap := map[string]string{
 			"[name]": class.Name,
 			"[path]": class.Path}
@@ -64,13 +56,8 @@ func main() {
 		errorCheck(err)
 		writer := bufio.NewWriter(fp)
 
-		// read template
-		temp, err := os.Open(class.Template)
-		if err != nil {
-			log.Fatal(err)
-		}
 		reg, _ := regexp.Compile("\\[.*?\\]")
-		sc := bufio.NewScanner(temp)
+		sc := bufio.NewScanner(readTemplate(class.Template))
 		for sc.Scan() {
 			if err := sc.Err(); err != nil {
 				break
@@ -119,4 +106,23 @@ func errorCheck(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func readClasses(config string) []Class {
+	param, err := ioutil.ReadFile(config)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var classes []Class
+	err = yaml.Unmarshal(param, &classes)
+	return classes
+}
+
+func readTemplate(path string) *os.File {
+	temp, err := os.Open(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer temp.Close()
+	return temp
 }
