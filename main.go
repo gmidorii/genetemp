@@ -29,6 +29,7 @@ func main() {
 	// set flag
 	c := flag.String("c", "config", "loading config file path")
 	flag.Parse()
+
 	configReader, err := os.Open(*c)
 	if err != nil {
 		log.Fatal(err)

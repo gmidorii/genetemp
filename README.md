@@ -3,7 +3,7 @@ genetemp generates [Java] file.
 
 #### config file
 - param setting
-- yaml
+- yaml format
 ```
 name(Required): GeneTemp
 path(Required): github.com/midorigreen/genetemp
