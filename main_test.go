@@ -12,7 +12,7 @@ func TestReadClasses(t *testing.T) {
 	s := "- name: Test1\n  path: output/test1\n  extension: .java\n  template: template/test1.java\n"
 	stdin := bytes.NewBufferString(s)
 	r := io.Reader(stdin)
-	classes := readClasses(r)
+	classes := ReadClasses(r)
 	if len(classes) != 1 {
 		t.Fatalf("expected read class number 1: actual %d", len(classes))
 	}
@@ -28,9 +28,27 @@ func TestWriteFile(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	w := bufio.NewWriter(stdout)
 	expected := "hoge"
-	writeFile(expected, w)
+	WriteFile(expected, w)
 
 	if bytes.Compare([]byte(expected+"\n"), stdout.Bytes()) != 0 {
 		t.Error("write string not match")
+	}
+}
+
+func TestConvertToMap(t *testing.T) {
+	class := Class{Name: "name", Path: "path", Extension: "ext", Template: "tmp"}
+	m := ConvertToMap(class)
+
+	if v, ok := m["[name]"]; !ok || v != "name" {
+		t.Errorf("map value incorrect {ok: %t, v:%s}", ok, v)
+	}
+	if v, ok := m["[path]"]; !ok || v != "path" {
+		t.Errorf("map value incorrect {ok: %t, v:%s}", ok, v)
+	}
+	if v, ok := m["[extension]"]; !ok || v != "ext" {
+		t.Errorf("map value incorrect {ok: %t, v:%s}", ok, v)
+	}
+	if v, ok := m["[template]"]; !ok || v != "tmp" {
+		t.Errorf("map value incorrect {ok: %t, v:%s}", ok, v)
 	}
 }

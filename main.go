@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 
+	"reflect"
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -28,32 +30,28 @@ func main() {
 	c := flag.String("c", "config", "loading config file path")
 	flag.Parse()
 	configReader, err := os.Open(*c)
-	errorCheck(err)
+	ErrorCheck(err)
 	defer configReader.Close()
 
-	for n, class := range readClasses(configReader) {
-		classMap := map[string]string{
-			"[name]": class.Name,
-			"[path]": class.Path}
-
+	for n, class := range ReadClasses(configReader) {
 		dir, err := os.Getwd()
-		errorCheck(err)
-
+		ErrorCheck(err)
 		for _, path := range strings.Split(class.Path, "/") {
 			dir = filepath.Join(dir, path)
 		}
-		classMap["[path]"] = strings.Replace(class.Path, "/", ".", -1) + "." + class.Name
+
+		class.Path = strings.Replace(class.Path, "/", ".", -1)
 
 		// make directory
 		if !dirExist(dir) {
 			err := os.MkdirAll(dir, os.ModePerm)
-			errorCheck(err)
+			ErrorCheck(err)
 		}
 
 		// create output file and writer
 		file := filepath.Join(dir, class.Name+class.Extension)
 		fp, err := os.Create(file)
-		errorCheck(err)
+		ErrorCheck(err)
 		writer := bufio.NewWriter(fp)
 
 		// read template file
@@ -63,6 +61,8 @@ func main() {
 		}
 		sc := bufio.NewScanner(temp)
 		reg, _ := regexp.Compile("\\[.*?\\]")
+
+		classMap := ConvertToMap(class)
 		for sc.Scan() {
 			if err := sc.Err(); err != nil {
 				break
@@ -71,7 +71,7 @@ func main() {
 			text := sc.Text()
 			match := reg.FindAllString(text, -1)
 			if len(match) == 0 {
-				writeFile(text, writer)
+				WriteFile(text, writer)
 				continue
 			}
 
@@ -82,7 +82,7 @@ func main() {
 					}
 				}
 			}
-			writeFile(text, writer)
+			WriteFile(text, writer)
 		}
 
 		fmt.Println("--------------------------------")
@@ -102,18 +102,18 @@ func dirExist(dirname string) bool {
 	return dir.IsDir()
 }
 
-func writeFile(text string, writer *bufio.Writer) {
+func WriteFile(text string, writer *bufio.Writer) {
 	writer.Write([]byte(text + "\n"))
 	writer.Flush()
 }
 
-func errorCheck(err error) {
+func ErrorCheck(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func readClasses(r io.Reader) []Class {
+func ReadClasses(r io.Reader) []Class {
 	param, err := ioutil.ReadAll(r)
 	if err != nil {
 		log.Fatal(err)
@@ -124,4 +124,15 @@ func readClasses(r io.Reader) []Class {
 		log.Fatal(err)
 	}
 	return classes
+}
+
+func ConvertToMap(class Class) map[string]string {
+	rt := reflect.TypeOf(class)
+	rv := reflect.ValueOf(class)
+	classMap := map[string]string{}
+	for i := 0; i < rt.NumField(); i++ {
+		key := "[" + strings.ToLower(rt.Field(i).Name) + "]"
+		classMap[key] = rv.Field(i).Interface().(string)
+	}
+	return classMap
 }
