@@ -18,6 +18,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+var version = "1.0"
+
 type Class struct {
 	Name      string
 	Path      string
@@ -27,10 +29,18 @@ type Class struct {
 
 func main() {
 	// set flag
-	c := flag.String("c", "config", "loading config file path")
+	var v bool
+	flag.BoolVar(&v, "v", false, "show version")
+	var c string
+	flag.StringVar(&c, "c", "config", "loading config file path")
 	flag.Parse()
 
-	configReader, err := os.Open(*c)
+	if v {
+		fmt.Println("version: ", version)
+		return
+	}
+
+	configReader, err := os.Open(c)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -97,7 +107,7 @@ func main() {
 		fmt.Println("--------------------------------")
 		fmt.Println("no: " + strconv.Itoa(n))
 		fmt.Println("template: " + class.Template)
-		fmt.Println("config: " + *c)
+		fmt.Println("config: " + c)
 		fmt.Println("create: " + file)
 		fmt.Println("--------------------------------")
 	}

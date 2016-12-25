@@ -23,7 +23,7 @@ public class [Name] {
 
 ### Build
 ```
-go build
+go build -ldflags [version]
 ```
 
 ### Run
