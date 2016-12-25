@@ -30,12 +30,16 @@ func main() {
 	c := flag.String("c", "config", "loading config file path")
 	flag.Parse()
 	configReader, err := os.Open(*c)
-	ErrorCheck(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer configReader.Close()
 
 	for n, class := range ReadClasses(configReader) {
 		dir, err := os.Getwd()
-		ErrorCheck(err)
+		if err != nil {
+			log.Fatal(err)
+		}
 		for _, path := range strings.Split(class.Path, "/") {
 			dir = filepath.Join(dir, path)
 		}
@@ -45,13 +49,17 @@ func main() {
 		// make directory
 		if !dirExist(dir) {
 			err := os.MkdirAll(dir, os.ModePerm)
-			ErrorCheck(err)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 
 		// create output file and writer
 		file := filepath.Join(dir, class.Name+class.Extension)
 		fp, err := os.Create(file)
-		ErrorCheck(err)
+		if err != nil {
+			log.Fatal(err)
+		}
 		writer := bufio.NewWriter(fp)
 
 		// read template file
@@ -105,12 +113,6 @@ func dirExist(dirname string) bool {
 func WriteFile(text string, writer *bufio.Writer) {
 	writer.Write([]byte(text + "\n"))
 	writer.Flush()
-}
-
-func ErrorCheck(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 func ReadClasses(r io.Reader) []Class {
