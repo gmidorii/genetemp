@@ -39,15 +39,10 @@ func main() {
 		dir, err := os.Getwd()
 		errorCheck(err)
 
-		var pack string
-		paths := strings.Split(class.Path, "/")
-		for _, path := range paths {
+		for _, path := range strings.Split(class.Path, "/") {
 			dir = filepath.Join(dir, path)
-			pack = pack + "." + path
 		}
-		pack = pack + "." + class.Name
-		pack = strings.TrimLeft(pack, ".")
-		classMap["[path]"] = pack
+		classMap["[path]"] = strings.Replace(class.Path, "/", ".", -1) + "." + class.Name
 
 		// make directory
 		if !dirExist(dir) {
