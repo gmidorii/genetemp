@@ -22,7 +22,9 @@ var version = "1.0"
 
 type Class struct {
 	Name      string
+	ClassName string
 	Path      string
+	Package   string
 	Extension string
 	Template  string
 }
@@ -66,7 +68,7 @@ func main() {
 		}
 
 		// create output file and writer
-		file := filepath.Join(dir, class.Name+class.Extension)
+		file := filepath.Join(dir, class.ClassName+class.Extension)
 		fp, err := os.Create(file)
 		if err != nil {
 			log.Fatal(err)
