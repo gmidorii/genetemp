@@ -56,15 +56,9 @@ func main() {
 		for _, path := range strings.Split(class.Path, "/") {
 			dir = filepath.Join(dir, path)
 		}
-
-		class.Path = strings.Replace(class.Path, "/", ".", -1)
-
-		// make directory
-		if !dirExist(dir) {
-			err := os.MkdirAll(dir, os.ModePerm)
-			if err != nil {
-				log.Fatal(err)
-			}
+		err = CreateDir(dir)
+		if err != nil {
+			log.Fatal(err)
 		}
 
 		// create output file and writer
@@ -75,12 +69,11 @@ func main() {
 		}
 		writer := bufio.NewWriter(fp)
 
-		// read template file
-		temp, err := os.Open(class.Template)
+		sc, err := ReadTemplate(class.Template)
 		if err != nil {
 			log.Fatal(err)
 		}
-		sc := bufio.NewScanner(temp)
+
 		reg, _ := regexp.Compile("\\[.*?\\]")
 
 		classMap := ConvertToMap(class)
@@ -95,14 +88,7 @@ func main() {
 				WriteFile(text, writer)
 				continue
 			}
-
-			for key, value := range classMap {
-				for _, m := range match {
-					if key == m {
-						text = strings.Replace(text, m, value, -1)
-					}
-				}
-			}
+			text = ReplaceParam(text, classMap, match)
 			WriteFile(text, writer)
 		}
 
@@ -115,7 +101,35 @@ func main() {
 	}
 }
 
-func dirExist(dirname string) bool {
+func ReplaceParam(text string, classMap map[string]string, match []string) string {
+	for key, value := range classMap {
+		for _, m := range match {
+			if key == m {
+				text = strings.Replace(text, m, value, -1)
+			}
+		}
+	}
+	return text
+}
+
+func CreateDir(dir string) error {
+	if !DirExist(dir) {
+		err := os.MkdirAll(dir, os.ModePerm)
+		return err
+	}
+	return nil
+}
+
+func ReadTemplate(path string) (*bufio.Scanner, error) {
+	temp, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	sc := bufio.NewScanner(temp)
+	return sc, err
+}
+
+func DirExist(dirname string) bool {
 	dir, err := os.Stat(dirname)
 	if err != nil {
 		return false
