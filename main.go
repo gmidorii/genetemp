@@ -20,6 +20,7 @@ import (
 
 var version = "1.0"
 
+// Class generated
 type Class struct {
 	Name      string
 	ClassName string
@@ -69,7 +70,7 @@ func main() {
 		}
 		writer := bufio.NewWriter(fp)
 
-		sc, err := ReadTemplate(class.Template)
+		sc, err := GetScanner(class.Template)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -101,6 +102,8 @@ func main() {
 	}
 }
 
+// ReplaceParam return line string
+// replace reading line string to map value if there is map key
 func ReplaceParam(text string, classMap map[string]string, match []string) string {
 	for key, value := range classMap {
 		for _, m := range match {
@@ -112,6 +115,8 @@ func ReplaceParam(text string, classMap map[string]string, match []string) strin
 	return text
 }
 
+// CreateDir return nil or error
+// create directory to arg path
 func CreateDir(dir string) error {
 	if !DirExist(dir) {
 		err := os.MkdirAll(dir, os.ModePerm)
@@ -120,7 +125,9 @@ func CreateDir(dir string) error {
 	return nil
 }
 
-func ReadTemplate(path string) (*bufio.Scanner, error) {
+// GetScanner return Scanner pointer
+// get scanner arg path
+func GetScanner(path string) (*bufio.Scanner, error) {
 	temp, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -129,6 +136,7 @@ func ReadTemplate(path string) (*bufio.Scanner, error) {
 	return sc, err
 }
 
+// DirExist return true if there is
 func DirExist(dirname string) bool {
 	dir, err := os.Stat(dirname)
 	if err != nil {
@@ -137,11 +145,14 @@ func DirExist(dirname string) bool {
 	return dir.IsDir()
 }
 
+// WriteFile arg text to arg writer
 func WriteFile(text string, writer *bufio.Writer) {
 	writer.Write([]byte(text + "\n"))
 	writer.Flush()
 }
 
+// ReadClasses return Class struct array
+// generate struct Class from reader
 func ReadClasses(r io.Reader) []Class {
 	param, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -155,6 +166,8 @@ func ReadClasses(r io.Reader) []Class {
 	return classes
 }
 
+// ConvertToMap return map
+// convert struct class to map
 func ConvertToMap(class Class) map[string]string {
 	rt := reflect.TypeOf(class)
 	rv := reflect.ValueOf(class)
